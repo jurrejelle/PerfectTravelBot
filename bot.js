@@ -21,7 +21,6 @@ function saveConfig() {
   });
 }
 
-const data = require('./data.json');
 
 // Create a client with our options
 const client = new tmi.client(opts);
@@ -111,22 +110,48 @@ function onMessageHandler (target, context, msg, self) {
     console.log("Responding to "+context.username+" with angle lookup: "+cmd);
     let rem = cmd.substring(1);
     if (rem.length === 0) return;
-    let any = false;
-    // chop off leading * and activate "any" instead of "highroll"
-    if (rem[0] === '*') {
-      any = true;
-      rem = rem.substring(1);
-    }
     // make sure it's a valid number before we try parsing it
-    if (!/-?[0-9]+(\.[0-9]+)?/.exec(rem)) return;
-    let ang = Number(rem);
-    let psbl = data[ang.toFixed(2)];
-    if (psbl && psbl.length > 0) {
-      if (any) {
-        txt = psbl.join(' | ');
-      } else {
-        txt = psbl[0];
+    //if (!/-?[0-9]+(\.[0-9]+)?/.exec(rem)) return;
+    rem = rem.split(" ");
+    if(rem.length!=3){
+      client.say(target, "Please use valid format: !x z angle");
+      return false;
+    }
+    for(int dataX = 1; dataX<=25; dataX++){
+      X = dataX-1;
+      Number = rem[0]
+      if((-4-5*X <= Number && Number <= -5*X) || (5*X <= Number && Number <= 5*X+5)){
+        url = "https://raw.githubusercontent.com/PerfectCDData/data"+dataX+"/main/"+rem[0]+"/"+rem[1]+".json";
+        
+        var xmlhttp = new XMLHttpRequest();
+
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == XMLHttpRequest.DONE) {   // XMLHttpRequest.DONE == 4
+               if (xmlhttp.status == 200) {
+                 try{
+                  var ret = JSON.parse(xmlhttp.responseText);
+                 } catch(e) {
+                   return;
+                 }
+                 console.log(ret[rem[2]].join(","))
+                 client.say(target, ret[rem[2]].join(","));
+               }
+               else if (xmlhttp.status == 400) {
+                  console.log('There was an error 400');
+               }
+               else {
+                   console.log('something else other than 200 was returned');
+               }
+            }
+        };
+        
+        xmlhttp.open("GET", url, true);
+        xmlhttp.send()
+        
       }
+     
+    }
+
     } else {
       txt = "None";
     }
